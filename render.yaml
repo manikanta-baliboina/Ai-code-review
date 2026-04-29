@@ -98,6 +98,7 @@ services:
   - type: keyvalue
     name: ai-code-review-redis
     plan: starter
+    ipAllowList: []
     maxmemoryPolicy: noeviction
 
 databases:
