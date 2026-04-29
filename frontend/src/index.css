@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply min-h-screen bg-slate-950 font-body text-slate-100 antialiased;
+  background-image:
+    radial-gradient(circle at top left, rgba(249, 115, 22, 0.18), transparent 30%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+#root {
+  @apply min-h-screen;
+}
+
+.review-glyph-critical,
+.review-glyph-high,
+.review-glyph-medium,
+.review-glyph-low {
+  border-radius: 9999px;
+  height: 10px;
+  margin-left: 6px;
+  margin-top: 6px;
+  width: 10px;
+}
+
+.review-glyph-critical {
+  background: #ef4444;
+}
+
+.review-glyph-high {
+  background: #f97316;
+}
+
+.review-glyph-medium {
+  background: #eab308;
+}
+
+.review-glyph-low {
+  background: #38bdf8;
+}

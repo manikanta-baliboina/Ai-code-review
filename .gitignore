@@ -1,0 +1,27 @@
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Python
+backend/__pycache__/
+backend/**/*.pyc
+backend/.venv/
+ai_service/__pycache__/
+ai_service/**/*.pyc
+ai_service/.venv/
+
+# Django
+backend/staticfiles/
+backend/media/
+
+# Env files
+.env
+backend/.env
+frontend/.env
+ai_service/.env
+
+# OS / editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
