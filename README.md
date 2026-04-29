@@ -1,13 +1,13 @@
 # AI-Powered Code Review Platform
 
-An end-to-end platform for connecting GitHub repositories, ingesting pull requests, running asynchronous AI-assisted reviews, and surfacing actionable feedback through a modern dashboard.
+An end-to-end platform for connecting GitHub repositories, ingesting pull requests, running AI-assisted reviews, and surfacing actionable feedback through a modern dashboard.
 
 ## Features
 
 - JWT authentication with GitHub OAuth2 sign-in
 - Repository connection and GitHub webhook registration
 - Pull request synchronization from GitHub
-- Asynchronous review processing with Celery and Redis
+- Review automation with GitHub webhooks and direct AI analysis
 - AI-powered review, security scan, and quality analysis
 - Rich dashboard with review metrics and recent activity
 - Monaco-based diff viewer with inline issue markers
@@ -20,12 +20,6 @@ An end-to-end platform for connecting GitHub repositories, ingesting pull reques
 | React Frontend   | <----> | Django REST Backend  | <----> | PostgreSQL       |
 | Vite + Tailwind  |        | Auth, APIs, Webhooks |        | Persistent data  |
 +------------------+        +----------+-----------+        +------------------+
-                                          |
-                                          v
-                               +----------------------+
-                               | Redis + Celery       |
-                               | Async job processing |
-                               +----------+-----------+
                                           |
                                           v
                                +----------------------+
@@ -53,9 +47,8 @@ Deployment was prepared for:
 
 - Frontend on Vercel
 - Django backend on Render Web Service
-- Celery worker on Render Worker
-- FastAPI AI service on Render Private Service
-- PostgreSQL and Key Value on Render
+- FastAPI AI service on Render Web Service
+- PostgreSQL on Render
 
 ### 1. Push the repository to GitHub
 
@@ -68,9 +61,7 @@ Render Blueprints and Vercel both deploy from a Git repository, so make sure thi
 3. Render will detect [render.yaml](c:\Projects\AI-code-Review\ai-code-review\render.yaml).
 4. Create the stack and let Render provision:
    - `ai-code-review-backend`
-   - `ai-code-review-celery`
    - `ai-code-review-ai`
-   - `ai-code-review-redis`
    - `ai-code-review-db`
 5. After the backend web service is created, copy its public URL. It will look like `https://your-backend-name.onrender.com`.
 
@@ -84,18 +75,9 @@ In the Render dashboard, set these exact values on the backend web service:
 - `GITHUB_CLIENT_SECRET=...`
 - `GITHUB_WEBHOOK_SECRET=...`
 
-Set these exact values on the AI private service:
+Set these exact values on the AI service:
 
 - `ANTHROPIC_API_KEY=...`
-
-Set this on the Celery worker as well:
-
-- `FRONTEND_URL=https://your-vercel-domain.vercel.app`
-- `BACKEND_PUBLIC_URL=https://your-backend-name.onrender.com`
-- `GITHUB_CLIENT_ID=...`
-- `GITHUB_CLIENT_SECRET=...`
-- `GITHUB_WEBHOOK_SECRET=...`
-- `SECRET_KEY=<same value as backend service>`
 
 ### 4. Deploy the frontend on Vercel
 
@@ -109,12 +91,11 @@ Set this on the Celery worker as well:
 
 ### 5. Update Render after Vercel gives you the frontend URL
 
-Once Vercel creates the real frontend URL, update `FRONTEND_URL` on both:
+Once Vercel creates the real frontend URL, update `FRONTEND_URL` on:
 
 - Render backend service
-- Render celery worker
 
-Then redeploy those services so CORS and CSRF settings use the correct origin.
+Then redeploy the backend service so CORS and CSRF settings use the correct origin.
 
 ### 6. Configure GitHub OAuth
 
@@ -129,12 +110,13 @@ Check these endpoints:
 
 - Frontend: `https://your-vercel-domain.vercel.app`
 - Backend admin: `https://your-backend-name.onrender.com/admin/`
-- AI health is private, so verify it indirectly through review jobs or by checking Render service health
+- AI health: `https://your-ai-service-name.onrender.com/health`
 
 ### Deployment Notes
 
 - Render Blueprints require the project to live in a Git repository.
-- The AI service is intentionally private on Render and is reached by the backend over Render private networking.
+- This free deployment path uses synchronous review execution instead of a Celery worker.
+- The AI service is deployed as a free Render web service instead of a private service.
 - The Django backend uses Gunicorn and WhiteNoise in production for admin/static asset serving.
 - Vercel is configured as a Vite SPA, so client-side routes like `/reviews/123` resolve correctly.
 
@@ -168,7 +150,7 @@ Check these endpoints:
 | Projects | GET | `/api/projects/prs/` | List pull requests |
 | Projects | GET | `/api/projects/prs/{id}/` | Pull request detail |
 | Reviews | GET | `/api/reviews/{pr_id}/` | Get review for a pull request |
-| Reviews | POST | `/api/reviews/{pr_id}/trigger/` | Queue a manual review |
+| Reviews | POST | `/api/reviews/{pr_id}/trigger/` | Run a manual review |
 | Reviews | GET | `/api/reviews/stats/` | Dashboard stats |
 | Webhooks | POST | `/api/webhooks/github/` | GitHub pull request webhook |
 
@@ -177,7 +159,7 @@ Check these endpoints:
 | Layer | Technologies |
 | --- | --- |
 | Frontend | React 18, Vite, TailwindCSS, React Router, React Query, Monaco |
-| Backend | Django 4.2, DRF, SimpleJWT, Celery, Redis |
+| Backend | Django 4.2, DRF, SimpleJWT |
 | AI Service | FastAPI, Anthropic SDK, httpx |
 | Database | PostgreSQL 15 |
 | DevOps | Docker, Docker Compose |

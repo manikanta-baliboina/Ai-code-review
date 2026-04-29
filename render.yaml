@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-code-review-backend
     runtime: python
-    plan: starter
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     preDeployCommand: python manage.py migrate
@@ -30,62 +30,16 @@ services:
         fromDatabase:
           name: ai-code-review-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: ai-code-review-redis
-          property: connectionString
       - key: AI_SERVICE_HOSTPORT
         fromService:
-          type: pserv
+          type: web
           name: ai-code-review-ai
           property: hostport
 
-  - type: worker
-    name: ai-code-review-celery
-    runtime: python
-    plan: starter
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: celery -A core worker --loglevel=info
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: DEBUG
-        value: "False"
-      - key: FRONTEND_URL
-        sync: false
-      - key: ALLOWED_HOSTS
-        value: .onrender.com
-      - key: BACKEND_PUBLIC_URL
-        sync: false
-      - key: GITHUB_CLIENT_ID
-        sync: false
-      - key: GITHUB_CLIENT_SECRET
-        sync: false
-      - key: GITHUB_WEBHOOK_SECRET
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ai-code-review-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: ai-code-review-redis
-          property: connectionString
-      - key: AI_SERVICE_HOSTPORT
-        fromService:
-          type: pserv
-          name: ai-code-review-ai
-          property: hostport
-
-  - type: pserv
+  - type: web
     name: ai-code-review-ai
     runtime: python
-    plan: starter
+    plan: free
     rootDir: ai_service
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
@@ -94,12 +48,6 @@ services:
         value: 3.11.9
       - key: ANTHROPIC_API_KEY
         sync: false
-
-  - type: keyvalue
-    name: ai-code-review-redis
-    plan: starter
-    ipAllowList: []
-    maxmemoryPolicy: noeviction
 
 databases:
   - name: ai-code-review-db

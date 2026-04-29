@@ -1,11 +1,10 @@
-"""Celery tasks for AI reviews."""
+"""Review execution helpers."""
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 import requests
-from celery import shared_task
 from django.conf import settings
 from django.db import transaction
 
@@ -23,9 +22,8 @@ def post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
     return response.json()
 
 
-@shared_task(bind=True)
-def run_ai_review(self, pr_id: int) -> dict[str, Any]:
-    """Run AI review workflows for a pull request."""
+def run_ai_review(pr_id: int) -> dict[str, Any]:
+    """Run AI review workflows for a pull request synchronously."""
     try:
         pull_request = PullRequest.objects.select_related("repository").get(pk=pr_id)
         pull_request.status = PullRequest.STATUS_REVIEWING

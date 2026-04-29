@@ -64,5 +64,6 @@ class GitHubWebhookView(APIView):
                 "github_url": pr_payload["html_url"],
             },
         )
-        run_ai_review.delay(pull_request.id)
-        return Response({"status": "accepted"})
+        result = run_ai_review(pull_request.id)
+        response_status = status.HTTP_200_OK if result.get("status") == "completed" else status.HTTP_500_INTERNAL_SERVER_ERROR
+        return Response(result, status=response_status)

@@ -40,20 +40,21 @@ class ReviewDetailView(APIView):
 
 
 class TriggerReviewView(APIView):
-    """Queue an AI review for a pull request."""
+    """Run an AI review for a pull request."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Any, pr_id: int) -> Response:
-        """Dispatch the Celery task."""
+        """Run the review immediately for free-tier deployments."""
         pull_request = PullRequest.objects.filter(pk=pr_id, repository__owner=request.user).first()
         if not pull_request:
             return Response(
                 {"error": "not_found", "detail": "Pull request not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        task = run_ai_review.delay(pull_request.id)
-        return Response({"status": "queued", "task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+        result = run_ai_review(pull_request.id)
+        response_status = status.HTTP_200_OK if result.get("status") == "completed" else status.HTTP_500_INTERNAL_SERVER_ERROR
+        return Response(result, status=response_status)
 
 
 class ReviewStatsView(APIView):
